@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BepInEx;
 using Nautilus.Assets;
 using Nautilus.Assets.Gadgets;
 using Nautilus.Assets.PrefabTemplates;
@@ -14,13 +15,13 @@ public class Handheldprefab
     public static FabricatorGadget HandheldfabGadget;
     public static ITreeActionReceiver FabrInstance;
     public static Vector3 PostScaleValue;
-    public static void Register()
+    public static void Register(Plugin plugin)
     {
         HandheldfabInfo = PrefabInfo.WithTechType("HandHeldToolsFabricator", "Hand Held Upgrades Fabricator",
                 "The hand held fabricator for Upgrades that are specific to tools and equipment.")
             .WithIcon(SpriteManager.Get(TechType.Fabricator));
         Handheldfab = new CustomPrefab(HandheldfabInfo);
-        if (Config.debugMode)
+        if (plugin.ConfigOptions.DebugMode)
         {
             HandheldfabGadget = Handheldfab.CreateFabricator(out HandheldfabTreeType)
                 .AddTabNode("Equipment", "Equipment", SpriteManager.Get(TechType.Fabricator))

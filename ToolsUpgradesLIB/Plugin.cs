@@ -79,7 +79,6 @@ public class Plugin : BaseUnityPlugin
         
         Logger.LogInfo("Initializing mod options");
         ConfigOptions = OptionsPanelHandler.RegisterModOptions<Config>();
-        UpgradesLIB.Config.debugMode = ConfigOptions.DebugMode;
         
         Logger.LogInfo("Methods are the following: ");
         Logger.LogInfo("(Coroutine) CreateUpgradesContainer(TechType (the TechType to operate on), string (name), string (what you actually refer to for differences), int (width), int (height)), TechType[] (what you want to be the allowed tech, not required), bool (Prevent deconstruction if not empty, not required)");
@@ -106,7 +105,7 @@ public class Plugin : BaseUnityPlugin
     {
         Logger.LogInfo($"Initializing prefabs: " );
         Logger.LogInfo("Loading HandHeldFabricator..." );
-        Handheldprefab.Register();
+        Handheldprefab.Register(this);
         
     }
 }
