@@ -13,7 +13,6 @@ public class Handheldprefab
     public static CustomPrefab Handheldfab;
     public static PrefabInfo HandheldfabInfo;
     public static FabricatorGadget HandheldfabGadget;
-    public static ITreeActionReceiver FabrInstance;
     public static Vector3 PostScaleValue;
     public static void Register(Plugin plugin)
     {
@@ -54,7 +53,8 @@ public class Handheldprefab
                 PrefabUtils.AddEnergyMixin<HandHeldBatterySource>(prefab, 
                     "'I don't really get why it exists, it just decreases the chance of a collision from like 9.399613e-55% to like 8.835272e-111%, both are very small numbers' - Lee23", 
                     TechType.Battery, compatbats);
-
+                prefab.AddComponent<Rigidbody>();
+                PrefabUtils.AddWorldForces(prefab, 5);
             }
         };
         Handheldfab.SetGameObject(clone);
@@ -104,7 +104,7 @@ public class HandHeldFabricator : PlayerTool
         Plugin.Logger.LogDebug($"OnRightHandDown: {relay.inboundPowerSources.Count},{relay.GetPower()}, {battery.connectedRelay}, {battery.enabled}, {battery.charge}");
             fab.opened = true;
             uGUI.main.craftingMenu.Open(Handheldprefab.HandheldfabGadget.CraftTreeType, fab);
-            return true;
+            return false;
     }
 
     public void Update()
