@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using BepInEx;
 using Nautilus.Assets;
@@ -5,6 +6,8 @@ using Nautilus.Assets.Gadgets;
 using Nautilus.Assets.PrefabTemplates;
 using Nautilus.Utility;
 using UnityEngine;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace UpgradesLIB.Items.Equipment;
 
@@ -14,26 +17,15 @@ public class Handheldprefab
     public static PrefabInfo HandheldfabInfo;
     public static FabricatorGadget HandheldfabGadget;
     public static Vector3 PostScaleValue;
-    public static void Register(Plugin plugin)
+    public static void Register()
     {
         HandheldfabInfo = PrefabInfo.WithTechType("HandHeldToolsFabricator", "Hand Held Upgrades Fabricator",
                 "The hand held fabricator for Upgrades that are specific to tools and equipment.")
             .WithIcon(SpriteManager.Get(TechType.Fabricator));
         Handheldfab = new CustomPrefab(HandheldfabInfo);
-        if (plugin.ConfigOptions.DebugMode)
-        {
-            HandheldfabGadget = Handheldfab.CreateFabricator(out HandheldfabTreeType)
-                .AddTabNode("Equipment", "Equipment", SpriteManager.Get(TechType.Fabricator))
-                .AddTabNode("Tools", "Tools", SpriteManager.Get(TechType.Fabricator))
-                .AddCraftNode(HandheldfabInfo.TechType, "Tools")
-                .AddCraftNode(HandheldfabInfo.TechType, "Equipment");
-        }
-        else
-        {
-            HandheldfabGadget = Handheldfab.CreateFabricator(out HandheldfabTreeType)
+        HandheldfabGadget = Handheldfab.CreateFabricator(out HandheldfabTreeType)
                 .AddTabNode("Equipment", "Equipment", SpriteManager.Get(TechType.Fabricator))
                 .AddTabNode("Tools", "Tools", SpriteManager.Get(TechType.Fabricator));
-        }
         var clone = new FabricatorTemplate(HandheldfabInfo, HandheldfabTreeType)
         {
             FabricatorModel = FabricatorTemplate.Model.Fabricator,
@@ -42,19 +34,28 @@ public class Handheldprefab
                 GameObject model = prefab.gameObject; 
                 model.transform.localScale = Vector3.one / 2f;
                 PostScaleValue = model.transform.localScale;
-                prefab.AddComponent<Pickupable>();
-                prefab.AddComponent<HandHeldFabricator>();
+                var hhf = prefab.AddComponent<HandHeldFabricator>();
                 List<TechType> compatbats = new List<TechType>()
                 {
                     TechType.Battery,
                     TechType.PrecursorIonBattery
                 };
-                prefab.AddComponent<HandHeldRelay>().dontConnectToRelays = true;
-                PrefabUtils.AddEnergyMixin<HandHeldBatterySource>(prefab, 
+                hhf.relay = prefab.AddComponent<HandHeldRelay>();
+                hhf.relay.dontConnectToRelays = true;
+                hhf.battery = PrefabUtils.AddEnergyMixin<HandHeldBatterySource>(prefab, 
                     "'I don't really get why it exists, it just decreases the chance of a collision from like 9.399613e-55% to like 8.835272e-111%, both are very small numbers' - Lee23", 
                     TechType.Battery, compatbats);
-                prefab.AddComponent<Rigidbody>();
-                PrefabUtils.AddWorldForces(prefab, 5);
+                hhf.fab = prefab.GetComponent<Fabricator>();
+                var pickupable = prefab.AddComponent<Pickupable>();
+                var rb = prefab.AddComponent<Rigidbody>();
+                PrefabUtils.AddWorldForces(prefab, 5f);
+                var actualModel = prefab.FindChild("submarine_fabricator_01");
+                var fpModel = prefab.AddComponent<FPModel>();
+                fpModel.viewModel = actualModel;
+                var copy = Object.Instantiate(actualModel, prefab.transform);
+                fpModel.propModel = copy;
+                actualModel.transform.localEulerAngles = new Vector3(0,180,0);
+                actualModel.transform.localPosition = new Vector3(0, 0, 0.15f);
             }
         };
         Handheldfab.SetGameObject(clone);
@@ -90,21 +91,36 @@ public class HandHeldFabricator : PlayerTool
     public Fabricator fab;
     public PowerRelay relay;
     public HandHeldBatterySource battery;
+    public override string animToolName => "seaglide";
     public override void Awake()
     {
-        fab = gameObject.GetComponent<Fabricator>();
-        relay = gameObject.GetComponent<PowerRelay>();
         fab.powerRelay = relay;
-        battery = gameObject.GetComponent<HandHeldBatterySource>();
         battery.connectedRelay = relay;
         relay.AddInboundPower(battery);
+        pickupable = gameObject.GetComponent<Pickupable>();
+        pickupable.droppedEvent.AddHandler(pickupable, parms =>
+        {
+            parms.gameObject.FindChild("collision").SetActive(true);
+        });
+        pickupable.pickedUpEvent.AddHandler(pickupable, parms =>
+        {
+            parms.gameObject.FindChild("collision").SetActive(false);
+        });
     }
-    public override bool OnRightHandDown()
+
+    public void Start()
     {
-        Plugin.Logger.LogDebug($"OnRightHandDown: {relay.inboundPowerSources.Count},{relay.GetPower()}, {battery.connectedRelay}, {battery.enabled}, {battery.charge}");
-            fab.opened = true;
-            uGUI.main.craftingMenu.Open(Handheldprefab.HandheldfabGadget.CraftTreeType, fab);
-            return false;
+        ikAimLeftArm = true;
+        ikAimRightArm = true;
+        savedIkAimLeftArm = true;
+        savedIkAimRightArm = true;
+    }
+
+    public override bool OnRightHandDown()
+    { 
+        fab.opened = true;
+        uGUI.main.craftingMenu.Open(Handheldprefab.HandheldfabGadget.CraftTreeType, fab);
+        return false;
     }
 
     public void Update()

@@ -28,10 +28,6 @@ namespace UpgradesLIB; // remember link: https://github.com/tinyhoot/Nautilus/bl
 public class Plugin : BaseUnityPlugin
 {
     public new static ManualLogSource Logger { get; private set; }
-
-    public static bool EnableTestNodestatic;
-
-    public Config ConfigOptions;
     
     private static Assembly Assembly { get; } = Assembly.GetExecutingAssembly();
     
@@ -78,34 +74,20 @@ public class Plugin : BaseUnityPlugin
         ModMessageSystem.SendGlobal("FindMyUpdates","https://raw.githubusercontent.com/Law-Abiding-Troller/Tool-Upgrades/refs/heads/main/ToolsUpgradesLIB/Version.json");
         
         Logger.LogInfo("Initializing mod options");
-        ConfigOptions = OptionsPanelHandler.RegisterModOptions<Config>();
         
         Logger.LogInfo("Methods are the following: ");
         Logger.LogInfo("(Coroutine) CreateUpgradesContainer(TechType (the TechType to operate on), string (name), string (what you actually refer to for differences), int (width), int (height)), TechType[] (what you want to be the allowed tech, not required), bool (Prevent deconstruction if not empty, not required)");
-        
-        if (ConfigOptions.DebugMode)
-        {
-            Logger.LogInfo("Debug Mode Enabled. Begin counting.");
-            Logger.LogWarning("This WILL clutter your log! Only keep this enabled if you are actually debugging!");
-        }
         
         // register harmony patches, if there are any
         Harmony.CreateAndPatchAll(Assembly, $"{PluginInfo.PLUGIN_NAME}");
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_NAME} is loaded! Loading other plugins." );
     }
 
-    private int timer = 0;
-    public void Update()
-    {
-        timer++;
-        if (ConfigOptions.DebugMode) Logger.LogDebug("Timer: 1");
-    }
-
     private void InitializePrefabs()
     {
         Logger.LogInfo($"Initializing prefabs: " );
         Logger.LogInfo("Loading HandHeldFabricator..." );
-        Handheldprefab.Register(this);
+        Handheldprefab.Register();
         
     }
 }
