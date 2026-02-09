@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using BepInEx;
@@ -9,6 +10,7 @@ using Nautilus.Utility;
 using Nautilus.Utility.ModMessages;
 using UpgradesLIB.Items.Equipment;
 using UnityEngine;
+using UnityEngine.UI;
 using PluginInfo = ToolsUpgradesLIB.PluginInfo;
 
 namespace UpgradesLIB; // remember link: https://github.com/tinyhoot/Nautilus/blob/debugging-tutorial/Nautilus/Documentation/guides/debugging.md for debugging
@@ -30,29 +32,11 @@ public class Plugin : BaseUnityPlugin
     public new static ManualLogSource Logger { get; private set; }
     
     private static Assembly Assembly { get; } = Assembly.GetExecutingAssembly();
-    
-    public static IEnumerator CreateUpgradesContainer(TechType tech, string storageRootName, string storageRootClassId, int width, int height, bool preventDeconstuctionIfNotEmpty = false)
-    {
-        Logger.LogInfo($"Coroutine started for CreateUpgradesContainer(TechType, string, string, int, int, TechType[], bool)!");//log EVERYTHING
-        Logger.LogInfo($"Fetching {tech}'s Prefab...");
-        CoroutineTask<GameObject> task = CraftData.GetPrefabForTechTypeAsync(tech);//fetch the prefab
-        yield return task;//wait for prefab to finish
-        Logger.LogInfo("Prefab Fetched Successfully!");
-        GameObject prefab = task.GetResult();//get the prefab
-        Logger.LogDebug($"{storageRootName},{storageRootClassId},{width},{height},{preventDeconstuctionIfNotEmpty}");
-        Logger.LogInfo($"The prefab for {tech} is {prefab}. Creating container for the prefab.");//log it because why not
-        PrefabUtils.AddStorageContainer(prefab, 
-        storageRootName, 
-            storageRootClassId, 
-            width, 
-            height, 
-            preventDeconstuctionIfNotEmpty); //use nautilus's method to create the storage container
-        Logger.LogInfo("Storage Container Added. If it opens, the task was successful");//log it
-    }
 
     public static TechGroup toolupgrademodules;
     public static TechGroup equipmentupgrademodules;
     public static TechCategory upgradelib;
+    public static bool registered = false;
     public void Awake()
     {
         // set project-scoped logger instance
@@ -70,13 +54,8 @@ public class Plugin : BaseUnityPlugin
             .RegisterToTechGroup(equipmentupgrademodules);
         equipmentupgrademodules= EnumHandler.AddEntry<TechGroup>("EquipmentUpgrades")
             .WithPdaInfo("Equipment Upgrade Modules");
-        
+
         ModMessageSystem.SendGlobal("FindMyUpdates","https://raw.githubusercontent.com/Law-Abiding-Troller/Tool-Upgrades/refs/heads/main/ToolsUpgradesLIB/Version.json");
-        
-        Logger.LogInfo("Initializing mod options");
-        
-        Logger.LogInfo("Methods are the following: ");
-        Logger.LogInfo("(Coroutine) CreateUpgradesContainer(TechType (the TechType to operate on), string (name), string (what you actually refer to for differences), int (width), int (height)), TechType[] (what you want to be the allowed tech, not required), bool (Prevent deconstruction if not empty, not required)");
         
         // register harmony patches, if there are any
         Harmony.CreateAndPatchAll(Assembly, $"{PluginInfo.PLUGIN_NAME}");
@@ -88,6 +67,5 @@ public class Plugin : BaseUnityPlugin
         Logger.LogInfo($"Initializing prefabs: " );
         Logger.LogInfo("Loading HandHeldFabricator..." );
         Handheldprefab.Register();
-        
     }
 }
