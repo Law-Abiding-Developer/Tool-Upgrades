@@ -36,11 +36,9 @@ public class uGUI_EquipmentPatches
     [HarmonyPrefix]
     public static void Awake_Patches(uGUI_Equipment __instance)
     {
-        if (Plugin.registered) return;
         foreach (var slotArray in DataTypes.Slots)
         {
             Utilities.CloneSlots(__instance, slotArray);
         }
-        Plugin.registered = true;
     }
 }

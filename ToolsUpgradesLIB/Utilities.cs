@@ -11,7 +11,7 @@ namespace UpgradesLIB;
 
 public static class Utilities
 {
-     public static IEnumerator CreateUpgradesContainer(TechType tech, string equipmentTypeName, string label, int totalSlots, BaseUnityPlugin owner, Action<GameObject> method = null)
+     public static IEnumerator CreateUpgradesContainer(TechType tech, string equipmentTypeName, string storageName, string storageClassID, string label, int totalSlots, BaseUnityPlugin owner, Action<GameObject> method = null)
     {
         var equipmentType = EnumHandler.AddEntry<EquipmentType>(equipmentTypeName).Value;
         if (!Types.ContainsKey(owner)) Types.Add(owner, new List<EquipmentType>()
@@ -27,7 +27,10 @@ public static class Utilities
         GameObject prefab = task.GetResult();//get the prefab
         Plugin.Logger.LogInfo($"The prefab for {tech} is {prefab}. Creating container for the prefab.");//log it because why no
 
-        prefab.AddComponent<ModdedUpgradeConsoleInput>();
+        var child = new GameObject(storageName);
+        child.transform.SetParent(prefab.transform, false);
+        child.AddComponent<ChildObjectIdentifier>().ClassId = storageClassID;
+        child.AddComponent<ModdedUpgradeConsoleInput>();
         var slots = new string[totalSlots];
         for (var i = 0; i < totalSlots; i++)
         {
