@@ -12,6 +12,11 @@ namespace UpgradesLIB;
 public static class Utilities
 {
      public static IEnumerator CreateUpgradesContainer(TechType tech, string equipmentTypeName, string storageName, string storageClassID, string label, int totalSlots, BaseUnityPlugin owner, Action<GameObject> method = null)
+     {
+         return CreateUpgradesContainer<ModdedUpgradeConsoleInput>(tech, equipmentTypeName, storageName, storageClassID, label, totalSlots, owner, method);
+     }
+     
+    public static IEnumerator CreateUpgradesContainer<T>(TechType tech, string equipmentTypeName, string storageName, string storageClassID, string label, int totalSlots, BaseUnityPlugin owner, Action<GameObject> method = null) where T : ModdedUpgradeConsoleInput
     {
         var equipmentType = EnumHandler.AddEntry<EquipmentType>(equipmentTypeName).Value;
         if (!Types.ContainsKey(owner)) Types.Add(owner, new List<EquipmentType>()
@@ -30,7 +35,7 @@ public static class Utilities
         var child = new GameObject(storageName);
         child.transform.SetParent(prefab.transform, false);
         child.AddComponent<ChildObjectIdentifier>().ClassId = storageClassID;
-        child.AddComponent<ModdedUpgradeConsoleInput>();
+        child.AddComponent<T>();
         var slots = new string[totalSlots];
         for (var i = 0; i < totalSlots; i++)
         {
@@ -100,5 +105,29 @@ public static class Utilities
             return null;
         }
         return Types[owner];
+    }
+
+    /// <summary>
+    /// Attempts to perform two linear searches on your player tool instance to find an upgrade panel given a name
+    /// </summary>
+    /// <param name="instance">The instance you need the upgrade panel from</param>
+    /// <param name="storageName">The name of the panel you need</param>
+    /// <param name="storageClassID">If the first search fails, give this an input to try to search for your panel</param>
+    /// <returns>The upgrade panel you want to find</returns>
+    public static ModdedUpgradeConsoleInput GetPanel(GameObject instance, string storageName, string storageClassID = null)
+    {
+        foreach (Transform item in instance.transform.Find(storageName))
+        {
+            if (item.TryGetComponent<ModdedUpgradeConsoleInput>(out var input)) return input;
+        }
+
+        foreach (var child in instance.GetComponentsInChildren<ChildObjectIdentifier>())
+        {
+            if (!child.ClassId.Equals(storageClassID)) continue;
+            if (!child.TryGetComponent<ModdedUpgradeConsoleInput>(out var input)) continue;
+            return input;
+        }
+
+        return null;
     }
 }
