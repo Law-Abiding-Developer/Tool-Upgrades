@@ -23,6 +23,17 @@ public class ModdedUpgradeConsoleInput : MonoBehaviour
         if (Player.main.pda.Open(PDATab.Inventory)) return;
         Player.main.pda.Close();
     }
+
+    public void OnProtoSerialize(ProtobufSerializer serializer)
+    {
+        Plugin.SaveData.instances.Add(gameObject.GetComponent<PrefabIdentifier>(), equipment.SaveEquipment());
+        Plugin.SaveData.Save();
+    }
+
+    public void OnProtoDeserialize(ProtobufSerializer serializer)
+    {
+        StorageHelper.TransferEquipment(gameObject, Plugin.SaveData.instances[gameObject.GetComponent<PrefabIdentifier>()], equipment);
+    }
 }
 
 public class DataTypes

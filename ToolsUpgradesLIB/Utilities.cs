@@ -18,13 +18,19 @@ public static class Utilities
      
     public static IEnumerator CreateUpgradesContainer<T>(TechType tech, string equipmentTypeName, string storageName, string storageClassID, string label, int totalSlots, BaseUnityPlugin owner, Action<GameObject> method = null) where T : ModdedUpgradeConsoleInput
     {
-        var equipmentType = EnumHandler.AddEntry<EquipmentType>(equipmentTypeName).Value;
-        if (!Types.ContainsKey(owner)) Types.Add(owner, new List<EquipmentType>()
+        EquipmentType equipmentType = EquipmentType.None;
+        if (EnumHandler.ModdedEnumExists<EquipmentType>(equipmentTypeName)) ErrorMessage.AddError($"Equipment type of name {equipmentTypeName} already exists!");
+        else
         {
-            equipmentType
-        });
-        else Types[owner].Add(equipmentType);
-        
+            equipmentType = EnumHandler.AddEntry<EquipmentType>(equipmentTypeName).Value;
+            if (!Types.ContainsKey(owner))
+                Types.Add(owner, new List<EquipmentType>()
+                {
+                    equipmentType
+                });
+            else Types[owner].Add(equipmentType);
+        }
+
         Plugin.Logger.LogInfo($"Fetching {tech}'s Prefab...");
         CoroutineTask<GameObject> task = CraftData.GetPrefabForTechTypeAsync(tech);//fetch the prefab
         yield return task;//wait for prefab to finish
@@ -34,8 +40,10 @@ public static class Utilities
 
         var child = new GameObject(storageName);
         child.transform.SetParent(prefab.transform, false);
-        child.AddComponent<ChildObjectIdentifier>().ClassId = storageClassID;
-        child.AddComponent<T>();
+        var cOI = child.AddComponent<ChildObjectIdentifier>();
+        cOI.ClassId = storageClassID;
+        
+        var component = prefab.AddComponent<T>();
         var slots = new string[totalSlots];
         for (var i = 0; i < totalSlots; i++)
         {
@@ -116,6 +124,7 @@ public static class Utilities
     /// <returns>The upgrade panel you want to find</returns>
     public static ModdedUpgradeConsoleInput GetPanel(GameObject instance, string storageName, string storageClassID = null)
     {
+        if (instance.TryGetComponent<ModdedUpgradeConsoleInput>(out var console)) return console;
         foreach (Transform item in instance.transform.Find(storageName))
         {
             if (item.TryGetComponent<ModdedUpgradeConsoleInput>(out var input)) return input;

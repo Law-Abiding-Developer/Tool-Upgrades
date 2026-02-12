@@ -34,9 +34,12 @@ public class Plugin : BaseUnityPlugin
     private static Assembly Assembly { get; } = Assembly.GetExecutingAssembly();
 
     public static TechGroup toolupgrademodules;
+    
     public static TechGroup equipmentupgrademodules;
+    
     public static TechCategory upgradelib;
-    public static bool registered = false;
+    
+    public static UpgradePanelSaveData SaveData = SaveDataHandler.RegisterSaveDataCache<UpgradePanelSaveData>();
     public void Awake()
     {
         // set project-scoped logger instance
