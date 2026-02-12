@@ -5,5 +5,5 @@ namespace UpgradesLIB;
 
 public class UpgradePanelSaveData : SaveDataCache
 {
-    public Dictionary<PrefabIdentifier, Dictionary<string, string>> instances = new();
+    public Dictionary<string, Dictionary<string, string>> instances = new();
 }

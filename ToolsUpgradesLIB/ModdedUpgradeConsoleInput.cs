@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace UpgradesLIB;
 
-public class ModdedUpgradeConsoleInput : MonoBehaviour
+public class ModdedUpgradeConsoleInput : MonoBehaviour, IProtoEventListener
 {
     private string[] _slots;
     public Equipment equipment;
@@ -26,13 +26,23 @@ public class ModdedUpgradeConsoleInput : MonoBehaviour
 
     public void OnProtoSerialize(ProtobufSerializer serializer)
     {
-        Plugin.SaveData.instances.Add(gameObject.GetComponent<PrefabIdentifier>(), equipment.SaveEquipment());
+        Plugin.SaveData.instances.Add(GetPrefabIdentifier().Id, equipment.SaveEquipment());
         Plugin.SaveData.Save();
     }
 
     public void OnProtoDeserialize(ProtobufSerializer serializer)
     {
-        StorageHelper.TransferEquipment(gameObject, Plugin.SaveData.instances[gameObject.GetComponent<PrefabIdentifier>()], equipment);
+        StorageHelper.TransferEquipment(gameObject, Plugin.SaveData.instances[GetPrefabIdentifier().Id], equipment);
+    }
+
+    private PrefabIdentifier GetPrefabIdentifier()
+    {
+        GameObject go = gameObject;
+        while (go.GetComponent<PrefabIdentifier>() == null)
+        {
+            go = go.transform.parent.gameObject;
+        }
+        return go.GetComponent<PrefabIdentifier>();
     }
 }
 
