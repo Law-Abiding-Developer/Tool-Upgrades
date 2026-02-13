@@ -5,12 +5,10 @@ using UnityEngine.Serialization;
 
 namespace UpgradesLIB;
 
-[Serializable]
 public class ModdedUpgradeConsoleInput : MonoBehaviour, IProtoEventListener
 {
     [FormerlySerializedAs("_slots")] [SerializeField]
     private string[] slots;
-    [SerializeField]
     public Equipment equipment;
     private GameObject _child;
     public void Awake()
@@ -21,7 +19,7 @@ public class ModdedUpgradeConsoleInput : MonoBehaviour, IProtoEventListener
     public void InitializeEquipment()
     {
         var techType = CraftData.GetTechType(gameObject);
-        _child = DataTypes.ChildObjects[techType];
+        _child = gameObject.FindChild(DataTypes.ChildObjects[techType]);
         equipment = new Equipment(gameObject, _child.transform);
         slots = DataTypes.Equipment[techType];
         equipment._label = DataTypes.Labels[techType];
@@ -64,7 +62,7 @@ public class DataTypes
     public static readonly List<DataTypes> Slots = new();
     public static readonly Dictionary<TechType, string[]> Equipment = new();
     public static readonly Dictionary<TechType, string> Labels = new();
-    public static readonly Dictionary<TechType, GameObject> ChildObjects = new();
+    public static readonly Dictionary<TechType, string> ChildObjects = new();
     public string[] Strings;
     public TechType TechType;
     public DataTypes(string[] strings, TechType techType)

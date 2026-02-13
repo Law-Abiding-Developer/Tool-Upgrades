@@ -55,7 +55,7 @@ public static class Utilities
         DataTypes.Slots.Add(new DataTypes(slots,tech));
         DataTypes.Equipment.Add(tech, slots);
         DataTypes.Labels.Add(tech, label);
-        DataTypes.ChildObjects.Add(tech, child);
+        DataTypes.ChildObjects.Add(tech, storageName);
         
         if (method != null) method.Invoke(prefab);
         Plugin.Logger.LogInfo("Upgrade Panel Added. If it opens, the task was successful");//log it
