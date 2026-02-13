@@ -16,7 +16,8 @@ public static class Utilities
          return CreateUpgradesContainer<ModdedUpgradeConsoleInput>(tech, equipmentTypeName, storageName, storageClassID, label, totalSlots, owner, method);
      }
      
-    public static IEnumerator CreateUpgradesContainer<T>(TechType tech, string equipmentTypeName, string storageName, string storageClassID, string label, int totalSlots, BaseUnityPlugin owner, Action<GameObject> method = null) where T : ModdedUpgradeConsoleInput
+    public static IEnumerator CreateUpgradesContainer<T>(TechType tech, string equipmentTypeName, string storageName, string storageClassID, string label, int totalSlots, BaseUnityPlugin owner, Action<GameObject> method = null) 
+        where T : ModdedUpgradeConsoleInput
     {
         EquipmentType equipmentType = EquipmentType.None;
         if (EnumHandler.ModdedEnumExists<EquipmentType>(equipmentTypeName)) ErrorMessage.AddError($"Equipment type of name {equipmentTypeName} already exists!");
@@ -54,6 +55,7 @@ public static class Utilities
         DataTypes.Slots.Add(new DataTypes(slots,tech));
         DataTypes.Equipment.Add(tech, slots);
         DataTypes.Labels.Add(tech, label);
+        DataTypes.ChildObjects.Add(tech, child);
         
         if (method != null) method.Invoke(prefab);
         Plugin.Logger.LogInfo("Upgrade Panel Added. If it opens, the task was successful");//log it

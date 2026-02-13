@@ -1,42 +1,51 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace UpgradesLIB;
 
 [Serializable]
 public class ModdedUpgradeConsoleInput : MonoBehaviour, IProtoEventListener
 {
+    [FormerlySerializedAs("_slots")] [SerializeField]
+    private string[] slots;
     [SerializeField]
-    private string[] _slots;
-    [SerializeField]
-    public Equipment Equipment;
+    public Equipment equipment;
+    private GameObject _child;
     public void Awake()
     {
-        Equipment = new Equipment(gameObject, gameObject.transform);
+        if (equipment == null) InitializeEquipment();
+    }
+
+    public void InitializeEquipment()
+    {
         var techType = CraftData.GetTechType(gameObject);
-        _slots = DataTypes.Equipment[techType];
-        Equipment._label = DataTypes.Labels[techType];
-        Equipment.AddSlots(_slots);
+        _child = DataTypes.ChildObjects[techType];
+        equipment = new Equipment(gameObject, _child.transform);
+        slots = DataTypes.Equipment[techType];
+        equipment._label = DataTypes.Labels[techType];
+        equipment.AddSlots(slots);
     }
 
     public void OpenPDA()
     {
-        if (Equipment == null) return;
-        Inventory.main.SetUsedStorage(Equipment);
+        if (equipment == null) return;
+        Inventory.main.SetUsedStorage(equipment);
         if (Player.main.pda.Open(PDATab.Inventory)) return;
         Player.main.pda.Close();
     }
 
     public void OnProtoSerialize(ProtobufSerializer serializer)
     {
-        Plugin.SaveData.instances.Add(GetPrefabIdentifier().Id, Equipment.SaveEquipment());
+        Plugin.SaveData.instances.Add(GetPrefabIdentifier().Id, equipment.SaveEquipment());
         Plugin.SaveData.Save();
     }
 
     public void OnProtoDeserialize(ProtobufSerializer serializer)
     {
-        StorageHelper.TransferEquipment(gameObject, Plugin.SaveData.instances[GetPrefabIdentifier().Id], Equipment);
+        if (equipment == null) InitializeEquipment();
+        StorageHelper.TransferEquipment(_child, Plugin.SaveData.instances[GetPrefabIdentifier().Id], equipment);
     }
 
     private PrefabIdentifier GetPrefabIdentifier()
@@ -55,6 +64,7 @@ public class DataTypes
     public static readonly List<DataTypes> Slots = new();
     public static readonly Dictionary<TechType, string[]> Equipment = new();
     public static readonly Dictionary<TechType, string> Labels = new();
+    public static readonly Dictionary<TechType, GameObject> ChildObjects = new();
     public string[] Strings;
     public TechType TechType;
     public DataTypes(string[] strings, TechType techType)
