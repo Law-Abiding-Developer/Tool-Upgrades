@@ -1,38 +1,42 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace UpgradesLIB;
 
+[Serializable]
 public class ModdedUpgradeConsoleInput : MonoBehaviour, IProtoEventListener
 {
+    [SerializeField]
     private string[] _slots;
-    public Equipment equipment;
+    [SerializeField]
+    public Equipment Equipment;
     public void Awake()
     {
-        equipment = new Equipment(gameObject, gameObject.transform);
+        Equipment = new Equipment(gameObject, gameObject.transform);
         var techType = CraftData.GetTechType(gameObject);
         _slots = DataTypes.Equipment[techType];
-        equipment._label = DataTypes.Labels[techType];
-        equipment.AddSlots(_slots);
+        Equipment._label = DataTypes.Labels[techType];
+        Equipment.AddSlots(_slots);
     }
 
     public void OpenPDA()
     {
-        if (equipment == null) return;
-        Inventory.main.SetUsedStorage(equipment);
+        if (Equipment == null) return;
+        Inventory.main.SetUsedStorage(Equipment);
         if (Player.main.pda.Open(PDATab.Inventory)) return;
         Player.main.pda.Close();
     }
 
     public void OnProtoSerialize(ProtobufSerializer serializer)
     {
-        Plugin.SaveData.instances.Add(GetPrefabIdentifier().Id, equipment.SaveEquipment());
+        Plugin.SaveData.instances.Add(GetPrefabIdentifier().Id, Equipment.SaveEquipment());
         Plugin.SaveData.Save();
     }
 
     public void OnProtoDeserialize(ProtobufSerializer serializer)
     {
-        StorageHelper.TransferEquipment(gameObject, Plugin.SaveData.instances[GetPrefabIdentifier().Id], equipment);
+        StorageHelper.TransferEquipment(gameObject, Plugin.SaveData.instances[GetPrefabIdentifier().Id], Equipment);
     }
 
     private PrefabIdentifier GetPrefabIdentifier()
