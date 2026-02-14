@@ -5,13 +5,14 @@ using UnityEngine.Serialization;
 
 namespace UpgradesLIB;
 
-public class ModdedUpgradeConsoleInput : MonoBehaviour, IProtoEventListener
+public class ModdedUpgradeConsoleInput : MonoBehaviour
 {
     [FormerlySerializedAs("_slots")] [SerializeField]
     private string[] slots;
     public Equipment equipment;
     private GameObject _child;
-    public void Awake()
+
+    public void Start()
     {
         if (equipment == null) InitializeEquipment();
     }
@@ -24,6 +25,7 @@ public class ModdedUpgradeConsoleInput : MonoBehaviour, IProtoEventListener
         slots = DataTypes.Equipment[techType];
         equipment._label = DataTypes.Labels[techType];
         equipment.AddSlots(slots);
+        equipment.Recover(_child.transform, slots);
     }
 
     public void OpenPDA()
@@ -32,18 +34,6 @@ public class ModdedUpgradeConsoleInput : MonoBehaviour, IProtoEventListener
         Inventory.main.SetUsedStorage(equipment);
         if (Player.main.pda.Open(PDATab.Inventory)) return;
         Player.main.pda.Close();
-    }
-
-    public void OnProtoSerialize(ProtobufSerializer serializer)
-    {
-        Plugin.SaveData.instances.Add(GetPrefabIdentifier().Id, equipment.SaveEquipment());
-        Plugin.SaveData.Save();
-    }
-
-    public void OnProtoDeserialize(ProtobufSerializer serializer)
-    {
-        if (equipment == null) InitializeEquipment();
-        StorageHelper.TransferEquipment(_child, Plugin.SaveData.instances[GetPrefabIdentifier().Id], equipment);
     }
 
     private PrefabIdentifier GetPrefabIdentifier()
